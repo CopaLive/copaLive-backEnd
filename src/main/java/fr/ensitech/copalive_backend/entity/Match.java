@@ -1,17 +1,12 @@
 package fr.ensitech.copalive_backend.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "matches")
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class Match {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,26 +15,16 @@ public class Match {
     @Column(name = "utc_date")
     private LocalDateTime utcDate;
 
-    // SCHEDULED, IN_PLAY, PAUSED, FINISHED
     private String status;
-
-    // PHASES : "GROUP_STAGE", "LAST_32", "LAST_16", "QUARTER_FINALS",
-    //          "SEMI_FINALS", "THIRD_PLACE", "FINAL"
     private String stage;
+    private String duration;
 
-    // Rempli uniquement pour les matchs de poule (ex: "Group A")
-    @Column(name = "group_name")
-    private String groupName;
+    // Relation "Localiser" (1,1)
+    @ManyToOne
+    @JoinColumn(name = "area_id")
+    private Area area;
 
-    @Column(name = "score_home")
-    private Integer scoreHome = 0;
-
-    @Column(name = "score_away")
-    private Integer scoreAway = 0;
-
-    @Column(name = "match_time")
-    private String matchTime;      // ex: "90+4'"
-
+    // Relations Domicile / Extérieur
     @ManyToOne
     @JoinColumn(name = "home_team_id")
     private Team homeTeam;
@@ -47,4 +32,9 @@ public class Match {
     @ManyToOne
     @JoinColumn(name = "away_team_id")
     private Team awayTeam;
+
+    // Relation "Gagner" (0,1) - Le vainqueur
+    @ManyToOne
+    @JoinColumn(name = "winner_team_id")
+    private Team winner;
 }
