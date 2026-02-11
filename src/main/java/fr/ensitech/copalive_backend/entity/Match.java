@@ -1,5 +1,6 @@
 package fr.ensitech.copalive_backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
@@ -14,6 +15,11 @@ public class Match {
 
     @Column(name = "match_date")
     private LocalDateTime utcDate;
+
+    @JsonProperty("date")
+    public String getFormattedDate() {
+        return utcDate != null ? utcDate.toString() : null;
+    }
 
     private String status; // SCHEDULED, IN_PLAY, PAUSED, FINISHED
     private String stage;

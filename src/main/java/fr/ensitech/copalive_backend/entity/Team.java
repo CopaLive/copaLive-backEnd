@@ -1,18 +1,18 @@
 package fr.ensitech.copalive_backend.entity;
 
-import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
+// src/main/java/fr/ensitech/copalive_backend/entity/Team.java
+@Data
 @Entity
 @Table(name = "teams")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class Team {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     private String name;
@@ -20,6 +20,7 @@ public class Team {
     @Column(name = "short_name")
     private String shortName;
 
+    @JsonProperty("flag")
     private String crest;
 
     @Column(name = "group_name")

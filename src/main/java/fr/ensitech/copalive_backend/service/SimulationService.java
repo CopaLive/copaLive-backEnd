@@ -20,7 +20,7 @@ public class SimulationService {
     private final Random random = new Random();
 
     // S'exécute toutes les 10 secondes
-    @Scheduled(fixedRate = 10000)
+    @Scheduled(fixedRate = 2500)
     @Transactional
     public void simulateLiveMatches() {
         // 1. Récupérer les matchs en cours
