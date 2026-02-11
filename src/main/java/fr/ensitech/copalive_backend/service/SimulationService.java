@@ -44,6 +44,15 @@ public class SimulationService {
         }
     }
 
+    public void updateMatchScore(Match match, boolean isHome) {
+        if (isHome) {
+            match.setHomeScore(match.getHomeScore() + 1);
+        } else {
+            match.setAwayScore(match.getAwayScore() + 1);
+        }
+        matchRepository.save(match);
+    }
+
     private void generateRandomEvent(Match match) {
         int eventType = random.nextInt(3); // 0 = But, 1 = Carton, 2 = Rien
 

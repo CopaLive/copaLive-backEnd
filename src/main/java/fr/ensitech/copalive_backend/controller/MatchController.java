@@ -48,72 +48,74 @@ public class MatchController {
         gameMap.put("homeTeam", mapTeamForFront(match.getHomeTeam(), match.getHomeScore()));
         gameMap.put("awayTeam", mapTeamForFront(match.getAwayTeam(), match.getAwayScore()));
 
-        // Récupération sécurisée des événements
-        List<Event> events = eventRepository.findByMatchId(match.getId());
+        // Récupération de tous les événements du match
+        List<Event> allEvents = eventRepository.findByMatchId(match.getId());
 
-        // On fusionne tous les événements dans une seule liste "events" si le front le demande,
-        // mais ici on suit votre structure actuelle avec des listes séparées
-        gameMap.put("goals", events.stream().filter(e -> e instanceof Goal).map(this::formatGoal).collect(Collectors.toList()));
-        gameMap.put("bookings", events.stream().filter(e -> e instanceof Booking).map(this::formatBooking).collect(Collectors.toList()));
+        // Création de la liste unifiée que le composant EventList.tsx parcourt
+        List<Map<String, Object>> eventsFormatted = allEvents.stream()
+                .map(this::mapSingleEvent)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        // On injecte la liste unifiée dans "events"
+        gameMap.put("events", eventsFormatted);
+
+        // On garde aussi les listes séparées par sécurité pour les autres composants
+        gameMap.put("goals", eventsFormatted.stream().filter(e -> "GOAL".equals(e.get("type"))).collect(Collectors.toList()));
+        gameMap.put("bookings", eventsFormatted.stream().filter(e -> "BOOKING".equals(e.get("type"))).collect(Collectors.toList()));
         gameMap.put("substitutions", new ArrayList<>());
         gameMap.put("penalties", new ArrayList<>());
 
         return gameMap;
     }
 
-    private Map<String, Object> formatGoal(Event e) {
-        Goal g = (Goal) e;
-        Map<String, Object> eventObj = new HashMap<>();
-        eventObj.put("type", "GOAL"); //
+    private Map<String, Object> mapSingleEvent(Event e) {
+        Map<String, Object> eventMap = new HashMap<>();
 
-        Map<String, Object> goalData = new HashMap<>();
-        goalData.put("minute", g.getOccurredAt()); //
+        if (e instanceof Goal) {
+            Goal g = (Goal) e;
+            eventMap.put("type", "GOAL");
+            Map<String, Object> goalData = new HashMap<>();
+            goalData.put("minute", g.getOccurredAt());
 
-        // Structure scorer.name
-        Map<String, Object> scorerObj = new HashMap<>();
-        String fullName = "Joueur inconnu";
-        if (g.getScorer() != null) {
-            fullName = g.getScorer().getFirstName() + " " + g.getScorer().getLastName();
+            // Structure: goal.scorer.name
+            Map<String, Object> scorerObj = new HashMap<>();
+            scorerObj.put("name", g.getScorer() != null ? g.getScorer().getFirstName() + " " + g.getScorer().getLastName() : "Buteur");
+            goalData.put("scorer", scorerObj);
+
+            // Structure: goal.team.name
+            goalData.put("team", mapTeamShort(g.getScorer() != null ? g.getScorer().getCurrentTeam() : null));
+
+            eventMap.put("goal", goalData);
         }
-        scorerObj.put("name", fullName);
-        goalData.put("scorer", scorerObj);
+        else if (e instanceof Booking) {
+            Booking b = (Booking) e;
+            eventMap.put("type", "BOOKING");
+            Map<String, Object> bookingData = new HashMap<>();
+            bookingData.put("minute", b.getOccurredAt());
+            bookingData.put("card", b.getCardType()); // YELLOW_CARD / RED_CARD
 
-        // Structure team.name pour getEventTeam
-        Map<String, Object> teamData = new HashMap<>();
-        teamData.put("name", (g.getScorer() != null && g.getScorer().getCurrentTeam() != null)
-                ? g.getScorer().getCurrentTeam().getName() : "N/A");
-        goalData.put("team", teamData);
+            // Structure: booking.player.name
+            Map<String, Object> playerObj = new HashMap<>();
+            playerObj.put("name", b.getReceiver() != null ? b.getReceiver().getFirstName() + " " + b.getReceiver().getLastName() : "Joueur");
+            bookingData.put("player", playerObj);
 
-        eventObj.put("goal", goalData);
-        return eventObj;
+            // Structure: booking.team.name
+            bookingData.put("team", mapTeamShort(b.getReceiver() != null ? b.getReceiver().getCurrentTeam() : null));
+
+            eventMap.put("booking", bookingData);
+        } else {
+            return null;
+        }
+
+        return eventMap;
     }
 
-    private Map<String, Object> formatBooking(Event e) {
-        Booking b = (Booking) e;
-        Map<String, Object> eventObj = new HashMap<>();
-        eventObj.put("type", "BOOKING"); //
-
-        Map<String, Object> bookingData = new HashMap<>();
-        bookingData.put("minute", b.getOccurredAt()); //
-        bookingData.put("card", b.getCardType()); //
-
-        // Structure player.name
-        Map<String, Object> playerObj = new HashMap<>();
-        String fullName = "Joueur inconnu";
-        if (b.getReceiver() != null) {
-            fullName = b.getReceiver().getFirstName() + " " + b.getReceiver().getLastName();
-        }
-        playerObj.put("name", fullName);
-        bookingData.put("player", playerObj);
-
-        // Structure team.name
-        Map<String, Object> teamData = new HashMap<>();
-        teamData.put("name", (b.getReceiver() != null && b.getReceiver().getCurrentTeam() != null)
-                ? b.getReceiver().getCurrentTeam().getName() : "N/A");
-        bookingData.put("team", teamData);
-
-        eventObj.put("booking", bookingData);
-        return eventObj;
+    private Map<String, Object> mapTeamShort(Team team) {
+        Map<String, Object> teamMap = new HashMap<>();
+        teamMap.put("name", team != null ? team.getName() : "N/A");
+        teamMap.put("id", team != null ? team.getId() : null);
+        return teamMap;
     }
 
     private Map<String, Object> mapTeamForFront(Team team, Integer score) {
