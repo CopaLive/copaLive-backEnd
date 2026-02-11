@@ -1,9 +1,6 @@
 package fr.ensitech.copalive_backend.entity;
 
-import jakarta.persistence.DiscriminatorValue;
-import jakarta.persistence.Entity;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -16,4 +13,7 @@ public class Goal extends Event{
     @ManyToOne
     @JoinColumn(name = "scorer_id")
     private Player scorer;
+
+    @Column(name = "goal_type")
+    private String type;
 }

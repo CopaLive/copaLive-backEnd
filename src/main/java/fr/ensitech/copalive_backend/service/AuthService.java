@@ -3,7 +3,7 @@ package fr.ensitech.copalive_backend.service;
 import fr.ensitech.copalive_backend.entity.User;
 import fr.ensitech.copalive_backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder; // <--- Import important
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -17,12 +17,15 @@ public class AuthService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    public User register(String email, String password) {
+    // On ajoute firstName et lastName en paramètres
+    public User register(String email, String password, String firstName, String lastName) {
         if (userRepository.existsByMail(email)) {
             throw new RuntimeException("Cet email est déjà utilisé !");
         }
         User newUser = new User();
         newUser.setMail(email);
+        newUser.setFirstName(firstName); // <--- Ici
+        newUser.setLastName(lastName);   // <--- Et là
 
         String encodedPassword = passwordEncoder.encode(password);
         newUser.setPassword(encodedPassword);
@@ -35,7 +38,6 @@ public class AuthService {
 
         if (userOpt.isPresent()) {
             User user = userOpt.get();
-
             if (passwordEncoder.matches(rawPassword, user.getPassword())) {
                 return user;
             }
